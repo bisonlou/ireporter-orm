@@ -1,0 +1,168 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Ireporter</title>
+</head>
+
+<body onload="componentDidLoad()">
+    <div id="error" class="alert alert-danger" style="display: none;" role="alert">
+        Error: unable to register user
+    </div>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" style="margin:10px">
+        Add User
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Register User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div style="margin:10px">
+                        <form id="register"">
+                            <div class=" form-group">
+                                <label for="username">Username</label>
+                                <input type="text" class="form-control" id="username" aria-describedby="emailHelp" placeholder="Username">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email address</label>
+                                <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Email">
+                            </div>
+                            <div class="form-group">
+                                <label for="phonenumber">Phone </label>
+                                <input type="tel" class="form-control" id="phonenumber" aria-describedby="emailHelp"
+                                    placeholder="Phone number">
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control" id="password" placeholder="Password">
+                            </div>
+                            <button type="submit" style class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div id="cards" style="display: flex;">
+
+    </div>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script>
+
+    $('#myModal').on('shown.bs.modal', function () {
+        $('#myInput').trigger('focus')
+    })
+
+    const componentDidLoad = () => {
+        fetch('http://127.0.0.1:5000/users', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(({ data }) => {
+                displayCards(data);
+                document.getElementById('error').style.disply = 'none';
+            })
+            .catch(err => {
+                document.getElementById('error').style.disply = 'block';
+            })
+    }
+
+
+    document.getElementById('register').onsubmit = e => {
+        e.preventDefault();
+
+        const data = {
+            'username': document.getElementById('username').value,
+            'email': document.getElementById('email').value,
+            'phonenumber': document.getElementById('phonenumber').value,
+            'password': document.getElementById('password').value
+        };
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        fetch('http://127.0.0.1:5000/users/register', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(({ data }) => {
+                clearCards();
+                displayCards(data);
+                document.getElementById('error').style.disply = 'none';
+            })
+            .catch(err => {
+                document.getElementById('error').style.disply = 'block';
+            })
+    }
+
+    const displayCards = data => {
+        for (let i = 0; i < data.length; i++) {
+            addCard(data[i]);
+        }
+    }
+
+    const clearCards = () => {
+        document.getElementById('cards').innerHTML = '';
+    }
+
+    const addCard = card => {
+        const cards = document.getElementById('cards').innerHTML;
+        console.log(cards);
+
+        const innerHTML = `
+        <div class="card" style="width: 18rem; margin: 10px;">
+            <div class="card-body">
+                <h5 class="card-title">${card.username}</h5>
+                <p class="card-text">${card.email}</p>
+                <p class="card-text">${card.phonenumber}</p>
+                <a href="#" onClick="deleteCard(${card.id})" class="btn btn-primary">Delete</a>
+            </div>
+        </div>`;
+
+        document.getElementById('cards').innerHTML = cards + innerHTML;
+    }
+
+    const deleteCard = userId => {
+        fetch('http://127.0.0.1:5000/users/delete', {
+            method: 'POST',
+            body: JSON.stringify({ userId }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(({ data }) => {
+                clearCards();
+                displayCards(data);
+                document.getElementById('error').style.disply = 'none';
+            })
+            .catch(err => {
+                document.getElementById('error').style.disply = 'block';
+            })
+    }
+</script>
+
+</html>

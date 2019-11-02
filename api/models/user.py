@@ -1,4 +1,5 @@
 from api.database import db
+import json
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -11,5 +12,9 @@ class User(db.Model):
     othernames = db.Column(db.String, nullable=True)
     phonenumber= db.Column(db.String, nullable=False)
     isadmin = db.Column(db.Boolean, default=False)
-    
-db.create_all()
+
+    def __repr__(self):
+        return f'<Todo {self.id} {self.description}>'
+
+    def as_dict(self):
+       return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
